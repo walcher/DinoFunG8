@@ -31,12 +31,6 @@ div.dino-control{
     stroke: black;
 }
 
-#main_svg rect.dot {
-    fill-opacity: 0.8;
-    stroke: black;
-}
-
-
 #main_svg rect.extent {
   fill: blueviolet;
   stroke: black;
@@ -114,11 +108,6 @@ Random user view
 }
 
 #main_svg circle.dot.checkin {
-	fill-opacity: 1;
-	stroke-width: 5px;
-	stroke: rgb(106, 250, 57);
-}
-#main_svg rect.dot.checkin {
 	fill-opacity: 1;
 	stroke-width: 5px;
 	stroke: rgb(106, 250, 57);
