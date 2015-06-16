@@ -6,6 +6,10 @@ import numpy as np
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
+        self.render("dino_map.html")
+
+class HomeMainHandler(tornado.web.RequestHandler):
+    def get(self):
         self.render("dino_velocity.html")
 
 class DinoFilter(tornado.web.RequestHandler):
@@ -90,10 +94,12 @@ if __name__ == "__main__":
 
 
     dos = dos.groupby(["id","hora"], as_index=False)["velocidad"].mean()
+    dos[np.isnan(dos)]=0
     dos = pd.DataFrame(dos)
 
     application = tornado.web.Application([
         (r"/", MainHandler),
+        (r"/home", HomeMainHandler),
         (r"/data", DataHandler,{"df":df}),
         (r"/velocitydata", VelocityDataHandler,{"dos":dos}),
         (r"/filter", DinoFilter),
