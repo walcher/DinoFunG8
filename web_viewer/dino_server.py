@@ -6,7 +6,7 @@ import numpy as np
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("dino_map.html")
+        self.render("dino_velocity.html")
 
 class DinoFilter(tornado.web.RequestHandler):
     def get(self):
@@ -47,6 +47,16 @@ class DataHandler(tornado.web.RequestHandler):
     def initialize(self, df):
         self.df = df[["X","Y","id","Timestamp","type"]]
 
+class VelocityDataHandler(tornado.web.RequestHandler):
+    def get(self):
+        dos = self.dos
+
+        data = dos.to_dict("records")
+
+        self.write({"array" :data})
+
+    def initialize(self, dos):
+        self.dos = dos[["id", "hora", "velocidad"]]
 
 settings = {"template_path" : os.path.dirname(__file__),
             "static_path" : os.path.join(os.path.dirname(__file__),"static"),
@@ -58,10 +68,34 @@ if __name__ == "__main__":
     print('loading...')
     df = pd.read_csv(path)
     df["time"] = pd.to_datetime(df.Timestamp, format="%Y-%m-%d %H:%M:%S")
+    df["hora"] = pd.to_datetime(df.Timestamp, format="%Y-%m-%d %H:%M:%S").dt.hour
+
+    def get_velocity(uno):
+        uno = uno.reset_index()
+        uno["distx"] = uno["X"].diff()
+        uno["disty"] = uno["Y"].diff()
+        uno["distancia"] =  np.sqrt( (uno["distx"]*5)**2 + (uno["disty"]*5)**2 )
+        uno["dtime"] = uno["time"].diff()
+        uno["velocidad"] = uno["distancia"]/(uno.dtime/np.timedelta64(1, 's'))
+
+        return uno
+
+    def get_mean_velocity(uno):
+        uno["velocidadpromedio"] = uno["velocidad"].mean()
+        return uno
+
+    newdf = df.sample(frac=0.25)
+
+    dos = newdf.groupby(["id","hora"]).apply(get_velocity)
+
+
+    dos = dos.groupby(["id","hora"], as_index=False)["velocidad"].mean()
+    dos = pd.DataFrame(dos)
 
     application = tornado.web.Application([
         (r"/", MainHandler),
         (r"/data", DataHandler,{"df":df}),
+        (r"/velocitydata", VelocityDataHandler,{"dos":dos}),
         (r"/filter", DinoFilter),
         (r"/filter_data", FilterData,{"df":df}),
         (r"/static/(.*)", tornado.web.StaticFileHandler,

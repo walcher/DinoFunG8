@@ -68,7 +68,7 @@
         scatter.selectAll(".dot").remove();
         console.log("reading guest");
         d3.select("#show_guest_button").attr("disabled", true);
-        d3.json("data", function (e, d) {
+        d3.json("data?id=1591741", function (e, d) {
             draw_guest(d.array);
         });
     }
